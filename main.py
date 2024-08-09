@@ -2,6 +2,7 @@ import csv
 import logging
 import os
 import time
+import re
 from config import (ADDRESS_ID, DATE_ID, DESCRIPTION_XPATH,
                     MENU, METRO_ID, PART_ID, PRIORITY,
                     PRIORITY_ID, RESPONSIBLE, RESPONSIBLE_XPATH,
@@ -152,9 +153,11 @@ def main() -> None:
             fill_metro(metro)
 
             time.sleep(2)
+            title = driver.find_element(By.CSS_SELECTOR, '.gwt-HTML.GHRP-MCCY')
+            title = ''.join(re.findall(r'\d{5}', title.text))
             driver.get(url=URL)
             time.sleep(1)
-            logging.info(f'Задача для "{kod_mo}" создана')
+            logging.info(f'Задача "{title}" для "{kod_mo}" создана')
 
     logging.info('Все задачи созданы')
     driver.quit()

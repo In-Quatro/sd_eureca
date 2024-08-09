@@ -9,5 +9,5 @@ METRO_ID = 'gwt-debug-StanciiMetro-value'
 MENU = {'1': 'отвезти документы',
         '2': 'забрать документы'}
 PRIORITY = '3. Средний'
-TOPIC = '2 этап (2024)'
+TOPIC = '3 этап (2024)'
 RESPONSIBLE = 'Курьеры'
