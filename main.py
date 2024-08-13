@@ -14,7 +14,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-
 load_dotenv()
 USERNAME = os.getenv('USER_NAME')
 PASSWORD = os.getenv('PASSWORD')
@@ -29,6 +28,29 @@ driver_options = webdriver.EdgeOptions()
 driver_options.add_argument("--headless")
 driver = webdriver.Edge(options=driver_options)
 
+def read_data() -> list:
+    csv_file: str = 'data.csv'
+    with open(csv_file, encoding='ANSI') as file:
+        file_reader = csv.DictReader(file, delimiter=";")
+        return list(file_reader)
+
+def check_data() -> bool:
+    actual_keys = (
+        'Код МО',
+        'Адрес для подписания',
+        'Метро',
+        'Кому отдавать 1',
+        'Телефон 1',
+        'Кому отдавать 2',
+        'Телефон 2',
+        'Примечание',
+        'Всего')
+    found_keys = read_data()
+    found_keys = set(found_keys[0].keys())
+    found_set = set(found_keys)
+    actual_set = set(actual_keys)
+    matches = found_set.intersection(actual_set)
+    return len(matches) == len(actual_keys)
 
 def authorization() -> None:
     """Авторизация на сайте."""
@@ -104,6 +126,8 @@ def fill_metro(metro: str) -> None:
 
 def main() -> None:
     """Главна логика скрипта."""
+    if not check_data():
+        exit('Проверить файл с данными, нет всех ключей!')
     num: str = input(
         'Выберите из списка:\n'
         '1 - Отвезти документы\n'
@@ -119,45 +143,46 @@ def main() -> None:
     logging.info('Открываю URL, ожидайте')
     authorization()
     logging.info('Начинаю создавать задачи, ожидайте')
-    with open(csv_file, encoding='ANSI') as file:
-        file_reader = csv.DictReader(file, delimiter=";")
-        for row in file_reader:
-            time.sleep(2)
+    # with open(csv_file, encoding='ANSI') as file:
+    #     file_reader = csv.DictReader(file, delimiter=";")
+    file_reader = read_data()
+    for row in file_reader:
+        time.sleep(2)
 
-            # Список полей
-            kod_mo: str = row['Код МО']
-            address: str = row['Адрес для подписания']
-            metro: str = row['Метро']
-            contact_1: str = row['Кому отдавать 1']
-            telephone_1: str = row['Телефон 1']
-            contact_2: str = row['Кому отдавать 2']
-            telephone_2: str = row['Телефон 2']
-            note: str = row['Примечание']
-            count: str = row['Всего']
-            description: str = (
-                f'{kod_mo} - {MENU[num]} ({count} шт. по {copy} экземпляра)\n'
-                f'\n{contact_1}\n'
-                f'{telephone_1}\n\n'
-                f'{contact_2}\n'
-                f'{telephone_2}\n\n'
-                f'{note}'
-            )
+        # Список полей
+        kod_mo: str = row['Код МО']
+        address: str = row['Адрес для подписания']
+        metro: str = row['Метро']
+        contact_1: str = row['Кому отдавать 1']
+        telephone_1: str = row['Телефон 1']
+        contact_2: str = row['Кому отдавать 2']
+        telephone_2: str = row['Телефон 2']
+        note: str = row['Примечание']
+        count: str = row['Всего']
+        description: str = (
+            f'{kod_mo} - {MENU[num]} ({count} шт. по {copy} экземпляра)\n'
+            f'\n{contact_1}\n'
+            f'{telephone_1}\n\n'
+            f'{contact_2}\n'
+            f'{telephone_2}\n\n'
+            f'{note}'
+        )
 
-            fill_topic()
-            fill_description(description)
-            fill_address(address)
-            fill_part(part)
-            fill_priority()
-            fill_date(date)
-            fill_responsible()
-            fill_metro(metro)
+        fill_topic()
+        fill_description(description)
+        fill_address(address)
+        fill_part(part)
+        fill_priority()
+        fill_date(date)
+        fill_responsible()
+        fill_metro(metro)
 
-            time.sleep(2)
-            title = driver.find_element(By.CSS_SELECTOR, '.gwt-HTML.GHRP-MCCY')
-            title = ''.join(re.findall(r'\d{5}', title.text))
-            driver.get(url=URL)
-            time.sleep(1)
-            logging.info(f'Задача "{title}" для "{kod_mo}" создана')
+        time.sleep(2)
+        title = driver.find_element(By.CSS_SELECTOR, '.gwt-HTML.GHRP-MCCY')
+        title = ''.join(re.findall(r'\d{5}', title.text))
+        driver.get(url=URL)
+        time.sleep(1)
+        logging.info(f'Задача "{title}" для "{kod_mo}" создана')
 
     logging.info('Все задачи созданы')
     driver.quit()
